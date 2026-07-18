@@ -1663,6 +1663,8 @@ class class_do_render_namumark:
     def do_render_table(self):
         self.render_data = re.sub(r'\n +\|\|', '\n||', self.render_data)
 
+        enable_scroll = False
+
         # get_tool_dark_mode_split
         # get_tool_px_add_check
         # get_tool_css_safe
@@ -1736,6 +1738,10 @@ class class_do_render_namumark:
                         table_parameter_all['col'] += 'word-break: keep-all !important;'
                     elif table_parameter == 'nopad':
                         table_parameter_all['td'] += 'padding: 0 !important;'
+                    elif table_parameter == 'enable_scroll':
+                        table_parameter_all['div'] += 'overflow-x: auto;'
+                        table_parameter_all['table'] += 'white-space: nowrap;'
+                        enable_scroll = True
                     elif re.search(r'^-[0-9]+$', table_parameter):
                         table_colspan_auto = 0
                         table_parameter_all['colspan'] = re.sub(r'[^0-9]+', '', table_parameter)
@@ -1860,7 +1866,10 @@ class class_do_render_namumark:
                 else:
                     table_data_end += '<tr style="' + table_parameter["tr"] + '">' + table_parameter["td"] + '</tr>'
 
-                table_data_end = '<table class="' + table_parameter['class'] + '" style="' + table_parameter['table'] + '">' + table_caption + table_data_end + '</table>'
+                if enable_scroll:
+                    table_data_end = '<table class="' + table_parameter['class'] + '" style="table-layout: auto !important; max-width: none !important;' + table_parameter['table'] + '">' + table_caption + table_data_end + '</table>'
+                else:
+                    table_data_end = '<table class="' + table_parameter['class'] + '" style="' + table_parameter['table'] + '">' + table_caption + table_data_end + '</table>'
                 table_data_end = '<div class="table_safe" style="' + table_parameter['div'] + '">' + table_data_end + '</div>'
 
                 self.render_data = re.sub(table_regex, lambda x : ('\n' + table_data_end + '\n'), self.render_data, 1)
