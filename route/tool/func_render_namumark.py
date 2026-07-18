@@ -2580,6 +2580,33 @@ class class_do_render_namumark:
         '''
 
     async def __call__(self):
+        def do_render_board(match):
+            options = match.group(1).replace("\n", " ").split()
+
+            size = "24"
+            for i in options:
+                if "=" in i:
+                    option = i.split("=", 1)
+                    if option[0] == "size":
+                        size = option[1]
+
+            content = match.group(2)
+            lines = content.split("\n")
+            result = '{{{#!wiki style="line-height: 0; border: 4px solid gray; width: max-content;"\n'
+
+            for i in lines:
+                for j in i:
+                    char = ""
+                    if j != " ":
+                        char = j.lower()
+                    result += f"[[파일:mino_{char}.png|width={size}px]]"
+                result += "[br]"
+
+            result += "}}}"
+            return html.escape(result)
+
+        self.render_data = re.sub(r"{{{#!board(.*?)\n(.*?)\n}}}", do_render_board, self.render_data, flags=re.DOTALL)
+
         self.do_render_remark()
         self.do_render_include_default()
         self.do_render_slash()
