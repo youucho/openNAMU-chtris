@@ -49,7 +49,15 @@ window.addEventListener("keydown", e => {
                 window.location.pathname = '/edit/' + doc_href;
             } else if(shortcut_key_list['KeyH'] === 1) {
                 window.location.pathname = '/history/' + doc_href;
+            } else if(shortcut_key_list['KeyM'] === 1) {
+            let is_mirror = document.cookie.includes('render_mirror=on');
+            if (is_mirror) {
+                document.cookie = "render_mirror=; path=/; max-age=0;";
+            } else {
+                document.cookie = "render_mirror=on; path=/;";
             }
+            window.location.reload();
+        }
         }
     }
 });

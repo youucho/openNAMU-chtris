@@ -49,6 +49,11 @@ class class_do_render_namumark:
         except:
             self.darkmode = '0'
 
+        try:
+            self.render_mirror = flask.request.cookies.get('render_mirror', '') # returns "on"
+        except:
+            self.render_mirror = ''
+
         self.data_temp_storage = {}
         self.data_temp_storage_count = 0
 
@@ -2590,8 +2595,21 @@ class class_do_render_namumark:
 
     async def __call__(self):
         def do_render_board(match):
+            def mirror_mino(mino):
+                if mino == "j":
+                    return "l"
+                elif mino == "l":
+                    return "j"
+                elif mino == "s":
+                    return "z"
+                elif mino == "z":
+                    return "s"
+                else:
+                    return mino
+
             options = match.group(1).replace("\n", " ").split()
 
+            # set parameters
             size = "24"
             for i in options:
                 if "=" in i:
@@ -2599,15 +2617,22 @@ class class_do_render_namumark:
                     if option[0] == "size":
                         size = option[1]
 
+            # make field
             content = match.group(2)
             lines = content.split("\n")
             result = '{{{#!wiki style="line-height: 0; border: 4px solid gray; width: max-content;"\n'
+            if self.render_mirror == "on":
+                result = '{{{#!wiki style="line-height: 0; border: 4px solid orange; width: max-content;"\n'
 
             for i in lines:
+                if self.render_mirror == "on":
+                    i = i[::-1]
                 for j in i:
                     char = ""
                     if j != " ":
                         char = j.lower()
+                    if self.render_mirror == "on":
+                        char = mirror_mino(char)
                     result += f"[[파일:mino_{char}.png|width={size}px]]"
                 result += "[br]"
 
