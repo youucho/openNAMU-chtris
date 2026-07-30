@@ -1,8 +1,23 @@
 from .tool.func import *
 
+from flask import jsonify, request
 from .go_api_w_raw import api_w_raw
 from .go_api_w_render import api_w_render
 from .go_api_w_page_view import api_w_page_view
+
+async def ajax_re_render(name):
+    doc_data = await api_w_raw(name)
+    if doc_data["response"] == "ok":
+        render_data = await api_w_render(name, request_method='POST', request_data={
+            'name': name,
+            'data': doc_data["data"]
+        })
+        return jsonify({
+            "success": True,
+            "html": render_data["data"],
+            "js": render_data["js_data"]
+        })
+    return jsonify({"success": False})
 
 async def view_w(name = 'Test', do_type = '', doc_rev = ''):
     with get_db_connect() as conn:

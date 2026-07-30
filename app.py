@@ -814,6 +814,7 @@ app.route('/bbs/delete/<int:bbs_num>/<int:post_num>/<comment_num>', methods = ['
 ## v1 API
 app.route('/api/render', methods = ['POST'])(api_w_render_exter)
 app.route('/api/render/<tool>', methods = ['POST'])(api_w_render_exter)
+app.route("/api/ajax_re_render/<everything:name>", methods = ["POST"])(ajax_re_render)
 
 app.route('/api/raw_exist/<everything:name>', defaults = { 'exist_check' : 'on' })(api_w_raw)
 app.route('/api/raw_rev/<int(signed = True):rev>/<everything:name>')(api_w_raw)
