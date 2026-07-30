@@ -50,13 +50,21 @@ window.addEventListener("keydown", e => {
             } else if(shortcut_key_list['KeyH'] === 1) {
                 window.location.pathname = '/history/' + doc_href;
             } else if(shortcut_key_list['KeyM'] === 1) {
-            let is_mirror = document.cookie.includes('render_mirror=on');
-            if (is_mirror) {
-                document.cookie = "render_mirror=; path=/; max-age=0;";
-            } else {
-                document.cookie = "render_mirror=on; path=/;";
-            }
-            window.location.reload();
+                let is_mirror = document.cookie.includes('render_mirror=on');
+                if (is_mirror) {
+                    document.cookie = "render_mirror=; path=/; max-age=0;";
+                } else {
+                    document.cookie = "render_mirror=on; path=/;";
+                }
+
+                let result = await ajaxReRender(doc_href);
+                if (result.success) {
+                    document.querySelector('#main_content').innerHTML = result.html;
+                    if (result.js) {
+                        eval(result.js);
+                    }
+                    console.log('Mirror mode re-rendered successfully');
+                }
         }
         }
     }
