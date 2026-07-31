@@ -2592,54 +2592,114 @@ class class_do_render_namumark:
             }\n
             opennamu_do_ip_render();\n
         '''
+    def mirror_mino(self, mino):
+        if mino == "j":
+            return "l"
+        elif mino == "l":
+            return "j"
+        elif mino == "s":
+            return "z"
+        elif mino == "z":
+            return "s"
+        else:
+            return mino
 
-    async def __call__(self):
-        def do_render_board(match):
-            def mirror_mino(mino):
-                if mino == "j":
-                    return "l"
-                elif mino == "l":
-                    return "j"
-                elif mino == "s":
-                    return "z"
-                elif mino == "z":
-                    return "s"
-                else:
-                    return mino
+    def do_render_board(self, match):
+        options = match.group(1).replace("\n", " ").split()
 
-            options = match.group(1).replace("\n", " ").split()
+        # set parameters
+        size = "24"
+        for i in options:
+            if "=" in i:
+                option = i.split("=", 1)
+                if option[0] == "size":
+                    size = option[1]
 
-            # set parameters
-            size = "24"
-            for i in options:
-                if "=" in i:
-                    option = i.split("=", 1)
-                    if option[0] == "size":
-                        size = option[1]
+        # make field
+        content = match.group(2)
+        lines = content.split("\n")
+        result = '{{{#!wiki style="line-height: 0; border: 4px solid gray; width: max-content;"\n'
+        if self.render_mirror == "on":
+            result = '{{{#!wiki style="line-height: 0; border: 4px solid orange; width: max-content;"\n'
 
-            # make field
-            content = match.group(2)
-            lines = content.split("\n")
-            result = '{{{#!wiki style="line-height: 0; border: 4px solid gray; width: max-content;"\n'
+        for i in lines:
             if self.render_mirror == "on":
-                result = '{{{#!wiki style="line-height: 0; border: 4px solid orange; width: max-content;"\n'
-
-            for i in lines:
+                i = i[::-1]
+            for j in i:
+                char = ""
+                if j != " ":
+                    char = j.lower()
                 if self.render_mirror == "on":
-                    i = i[::-1]
-                for j in i:
-                    char = ""
-                    if j != " ":
-                        char = j.lower()
-                    if self.render_mirror == "on":
-                        char = mirror_mino(char)
-                    result += f"[[파일:mino_{char}.png|width={size}px]]"
-                result += "[br]"
+                    char = self.mirror_mino(char)
+                result += f"[[파일:mino_{char}.png|width={size}px]]"
+            result += "[br]"
 
-            result += "}}}"
-            return html.escape(result)
+        result += "}}}"
+        return html.escape(result)
 
-        self.render_data = re.sub(r"{{{#!board(.*?)\n(.*?)\n}}}", do_render_board, self.render_data, flags=re.DOTALL)
+    def do_render_mino(self, match):
+        mino = match.group(2).lower()
+        border = ""
+        if self.render_mirror == "on" and match.group(1) is None:
+            mino = self.mirror_mino(mino)
+            border = " border: 2px solid orange;"
+        color = ""
+        if mino == "j":
+            color = "3200fc"
+        elif mino == "l":
+            color = "fc9b00"
+        elif mino == "s":
+            color = "14b200"
+        elif mino == "z":
+            color = "fc0000"
+        elif mino == "t":
+            color = "b000fc"
+        elif mino == "i":
+            color = "00d2fc"
+        elif mino == "o":
+            color = "c6a500"
+        result = '{{{#!wiki style="background-color: #%s; color: #ffffff; border-radius: 10px; display: inline-block; font-weight: bold; padding: 0px 5px;%s"\n%s미노}}}' % (color, border, mino.upper())
+        return html.escape(result)
+
+    def do_render_spin(self, match):
+        mino = match.group(2).lower()
+        spin = match.group(3).upper()
+        color = ""
+        if self.render_mirror == "on" and match.group(1) is None:
+            mino = self.mirror_mino(mino)
+            color = "orange"
+        inner = ""
+        if mino == "j":
+            color = "#3200fc"
+            inner = "#1d018e"
+        elif mino == "l":
+            color = "#fc9b00"
+            inner = "#995e00"
+        elif mino == "s":
+            color = "#14b200"
+            inner = "#095400"
+        elif mino == "z":
+            color = "#fc0000"
+            inner = "#720303"
+        elif mino == "t":
+            color = "#b000fc"
+            inner = "#57017c"
+        elif mino == "i":
+            color = "#00d2fc"
+            inner = "#01667a"
+        elif mino == "o":
+            color = "#c6a500"
+            inner = "#6d5b01"
+        if self.render_mirror == "on" and match.group(1) is None:
+            color = "orange"
+        result = '{{{#!wiki style="background-color: %s; color: #ffffff; border-radius: 10px; display: inline-block; font-weight: bold; padding: 0px 5px; border: 2px solid %s;"\n%sS%s}}}' % (inner, color, mino.upper(), spin)
+        return html.escape(result)
+    
+    async def __call__(self):
+        self.render_data = re.sub(r"{{{#!board(.*?)\n(.*?)\n}}}", self.do_render_board, self.render_data, flags=re.DOTALL)
+
+        self.render_data = re.sub(r'\[mino(i)?:(.)\]', self.do_render_mino, self.render_data)
+        self.render_data = re.sub(r'\[spin(i)?:(.)[sS]?(.)\]', self.do_render_spin, self.render_data)
 
         self.do_render_remark()
         self.do_render_include_default()
